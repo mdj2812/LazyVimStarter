@@ -7,6 +7,7 @@ return {
         "stylua",
         "clangd",
         "clang-format",
+        "cmakelint",
         "codespell",
         "codelldb",
         "python-lsp-server",

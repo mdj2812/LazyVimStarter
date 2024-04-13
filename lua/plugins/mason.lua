@@ -8,7 +8,7 @@ return {
         "clangd",
         "clang-format",
         "cmakelint",
-        "gersemi",
+        "cmakelang",
         "codespell",
         "codelldb",
         "python-lsp-server",

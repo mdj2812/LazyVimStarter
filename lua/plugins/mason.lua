@@ -8,6 +8,7 @@ return {
         "clangd",
         "clang-format",
         "cmakelint",
+        "gersemi",
         "codespell",
         "codelldb",
         "python-lsp-server",

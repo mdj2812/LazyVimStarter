@@ -11,7 +11,6 @@ return {
         "cmakelang",
         "codespell",
         "codelldb",
-        "python-lsp-server",
       },
     },
   },

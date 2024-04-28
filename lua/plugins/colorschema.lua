@@ -1,25 +1,36 @@
 return {
+  -- { "ellisonleao/gruvbox.nvim" },
+
   {
-    "scottmckendry/cyberdream.nvim",
-    lazy = false,
+    "folke/tokyonight.nvim",
+    lazy = true,
     priority = 1000,
-    config = function()
-      require("cyberdream").setup({
-        -- Recommended - see "Configuring" below for more config options
-        transparent = true,
-        italic_comments = true,
-        hide_fillchars = true,
-        borderless_telescope = true,
-        terminal_colors = true,
-      })
-    end,
+    opts = {
+      style = "night",
+      transparent = true,
+    },
   },
 
-  -- Configure LazyVim to load gruvbox
+  -- {
+  --   "scottmckendry/cyberdream.nvim",
+  --   lazy = false,
+  --   priority = 1000,
+  --   config = function()
+  --     require("cyberdream").setup({
+  --       -- Recommended - see "Configuring" below for more config options
+  --       transparent = true,
+  --       italic_comments = true,
+  --       hide_fillchars = true,
+  --       borderless_telescope = true,
+  --       terminal_colors = true,
+  --     })
+  --   end,
+  -- },
+
   {
     "LazyVim/LazyVim",
     opts = {
-      colorscheme = "cyberdream",
+      colorscheme = "tokyonight",
     },
   },
 }

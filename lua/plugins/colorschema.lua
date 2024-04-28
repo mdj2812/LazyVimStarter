@@ -2,14 +2,27 @@ return {
   -- { "ellisonleao/gruvbox.nvim" },
 
   {
-    "folke/tokyonight.nvim",
-    lazy = true,
+    "catppuccin/nvim",
+    name = "catppuccin",
     priority = 1000,
     opts = {
-      style = "night",
-      transparent = true,
+      background = {
+        light = "latte",
+        dark = "frappe",
+      },
+      transparent_background = true,
     },
   },
+
+  -- {
+  --   "folke/tokyonight.nvim",
+  --   lazy = true,
+  --   priority = 1000,
+  --   opts = {
+  --     style = "storm",
+  --     transparent = true,
+  --   },
+  -- },
 
   -- {
   --   "scottmckendry/cyberdream.nvim",
@@ -30,7 +43,7 @@ return {
   {
     "LazyVim/LazyVim",
     opts = {
-      colorscheme = "tokyonight",
+      colorscheme = "catppuccin",
     },
   },
 }

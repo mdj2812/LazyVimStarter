@@ -5,4 +5,4 @@
 local map = LazyVim.safe_keymap_set
 
 map("n", "-", "<cmd>Oil<cr>", { desc = "Oil (cwd)" })
-map("n", "<C-o>", "<cmd>Oil --float<cr>", { desc = "Oil Floating (cwd)" })
+map("n", "<A-o>", "<cmd>Oil --float<cr>", { desc = "Oil Floating (cwd)" })

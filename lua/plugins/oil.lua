@@ -7,10 +7,6 @@ return {
       "size",
       "mtime",
     },
-    win_options = {
-      wrap = true,
-      list = true,
-    },
     experimental_watch_for_changes = true,
   },
   -- Optional dependencies

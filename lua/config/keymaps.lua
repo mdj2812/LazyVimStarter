@@ -4,5 +4,5 @@
 
 local map = LazyVim.safe_keymap_set
 
-map("n", "-", "<cmd>Oil<cr>", { desc = "Oil (cwd)" })
-map("n", "<A-o>", "<cmd>Oil --float<cr>", { desc = "Oil Floating (cwd)" })
+map("n", "-", "<CMD>Oil<CR>", { desc = "Open parent directory" })
+map("n", "<A-o>", "<CMD>Oil --float<CR>", { desc = "Open parent directory (Floating)" })

@@ -17,7 +17,6 @@ require("lazy").setup({
     -- { import = "lazyvim.plugins.extras.ui.mini-animate" },
     { import = "lazyvim.plugins.extras.coding.copilot" },
     { import = "lazyvim.plugins.extras.dap.core" },
-    { import = "lazyvim.plugins.extras.editor.trouble-v3" },
     { import = "lazyvim.plugins.extras.lang.clangd" },
     { import = "lazyvim.plugins.extras.lang.cmake" },
     { import = "lazyvim.plugins.extras.lang.json" },

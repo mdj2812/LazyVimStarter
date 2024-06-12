@@ -11,6 +11,7 @@ return {
         "cmakelang",
         "codespell",
         "codelldb",
+        "debugpy",
       },
     },
   },

@@ -8,7 +8,6 @@ return {
         "clangd",
         "clang-format",
         "cmakelint",
-        "cmakelang",
         "codespell",
         "codelldb",
         "debugpy",

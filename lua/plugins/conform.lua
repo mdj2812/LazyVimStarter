@@ -4,7 +4,7 @@ return {
     opts = {
       formatters_by_ft = {
         cpp = { "clang-format" },
-        cmake = { "cmake-format" },
+        cmake = { "cmake_format" },
         lua = { "stylua" },
         python = { "isort", "autopep8" },
         json = { "jq" },

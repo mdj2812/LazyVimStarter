@@ -3,11 +3,11 @@ return {
   opts = {
     columns = {
       "icon",
-      "permissions",
-      "size",
-      "mtime",
+      -- "permissions",
+      -- "size",
+      -- "mtime",
     },
-    experimental_watch_for_changes = true,
+    watch_for_changes = true,
   },
   -- Optional dependencies
   dependencies = { "nvim-tree/nvim-web-devicons" },

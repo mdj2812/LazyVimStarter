@@ -8,9 +8,8 @@ return {
     opts = {
       background = {
         light = "latte",
-        dark = "frappe",
+        dark = "mocha",
       },
-      transparent_background = true,
     },
   },
 

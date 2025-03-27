@@ -34,7 +34,7 @@ return {
             "--clang-tidy",
             "--malloc-trim",
             "--background-index",
-            "--pch-storage=disk",
+            "--pch-storage=memory",
           },
         },
       },

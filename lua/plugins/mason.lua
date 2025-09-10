@@ -12,6 +12,9 @@ return {
         "codelldb",
         "debugpy",
       },
+      ui = {
+        border = "rounded",
+      },
     },
   },
 }

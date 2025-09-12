@@ -7,6 +7,7 @@ return {
       },
       formatters_by_ft = {
         cpp = { "clang-format" },
+        cuda = { "clang-format" },
         cmake = { "cmake_format" },
         lua = { "stylua" },
         python = { "isort", "autopep8" },

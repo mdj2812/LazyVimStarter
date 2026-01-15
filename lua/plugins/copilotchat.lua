@@ -1,5 +1,5 @@
 return {
-  "CopilotChat/CopilotChat.nvim",
+  "CopilotC-Nvim/CopilotChat.nvim",
   opts = {
     model = "claude-sonnet-4.5",
   },

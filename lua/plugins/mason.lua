@@ -11,6 +11,7 @@ return {
         "codespell",
         "codelldb",
         "debugpy",
+        "yamlfmt",
       },
       ui = {
         border = "rounded",

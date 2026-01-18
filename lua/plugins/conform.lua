@@ -12,7 +12,7 @@ return {
         lua = { "stylua" },
         python = { "isort", "autopep8" },
         json = { "jq" },
-        yaml = { "prettier" },
+        yaml = { "yamlfmt" },
         ["*"] = { "codespell" },
         ["_"] = { "trim_whitespace" },
       },

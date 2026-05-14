@@ -24,6 +24,9 @@ return {
         jq = {
           args = { "--indent", "4" },
         },
+        codespell = {
+          args = { "ignore-words", ".codespellignore" },
+        },
       },
     },
   },

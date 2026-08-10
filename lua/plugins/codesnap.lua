@@ -1,6 +1,5 @@
 return {
   "mistricky/codesnap.nvim",
-  tag = "v2.0.5",
   opts = {
     show_line_number = true,
     snapshot_config = {

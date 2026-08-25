@@ -22,7 +22,7 @@ return {
           stdin = false,
         },
         jq = {
-          args = { "--indent", "4" },
+          args = { "--indent", "2" },
         },
         codespell = {
           args = { "ignore-words", ".codespellignore" },

@@ -14,8 +14,7 @@ end
 
 function M.setup()
   if not transparency.uses_matugen() then
-    transparency.set_matugen_active(false)
-    vim.cmd.colorscheme(M.fallback_colorscheme)
+    transparency.setup_fallback_theme(M.fallback_colorscheme, M.catppuccin.flavour)
     return
   end
 

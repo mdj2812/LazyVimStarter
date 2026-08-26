@@ -1,5 +1,5 @@
 return {
-  BACKGROUND_GROUPS = {
+  TRANSPARENT_GROUPS = {
     "Normal",
     "NormalNC",
     "SignColumn",
@@ -15,9 +15,6 @@ return {
     "WinBarNC",
     "VertSplit",
     "WinSeparator",
-  },
-
-  FLOAT_GROUPS = {
     "NormalFloat",
     "FloatBorder",
     "FloatTitle",
@@ -42,6 +39,32 @@ return {
     "PmenuBorder",
     "PmenuKind",
     "PmenuExtra",
+    "DiffAdd",
+    "DiffChange",
+    "DiffDelete",
+    "DiffText",
+    "DiffTextAdd",
+    "DiffAdded",
+    "DiffRemoved",
+    "DiffFile",
+    "DiffNewFile",
+    "DiffLine",
+  },
+
+  TRANSPARENT_PATTERNS = {
+    "^BufferLine",
+    "^NeoTree",
+    "^NvimTree",
+    "^Mason",
+    "^Lazy",
+    "^GitSigns",
+    "^GitGutter",
+    "^lualine_.*_diff_",
+    "^Telescope",
+    "^Snacks",
+    "^Oil",
+    "^Blink",
+    "^Cmp",
   },
 
   -- base16 does not define these; blink cmdline path completions use them for icons
@@ -53,37 +76,5 @@ return {
   CATPPUCCIN_BLINK_KIND_GROUPS = {
     BlinkCmpKindFile = "red",
     BlinkCmpKindFolder = "peach",
-  },
-
-  FLOAT_PATTERNS = {
-    "^Telescope",
-    "^Snacks",
-    "^Oil",
-    "^Blink",
-    "^Cmp",
-  },
-
-  BACKGROUND_PATTERNS = {
-    "^BufferLine",
-    "^NeoTree",
-    "^NvimTree",
-    "^Mason",
-    "^Lazy",
-    "^GitSigns",
-    "^GitGutter",
-    "^lualine_.*_diff_",
-  },
-
-  DIFF_GROUPS = {
-    "DiffAdd",
-    "DiffChange",
-    "DiffDelete",
-    "DiffText",
-    "DiffTextAdd",
-    "DiffAdded",
-    "DiffRemoved",
-    "DiffFile",
-    "DiffNewFile",
-    "DiffLine",
   },
 }

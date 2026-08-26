@@ -27,10 +27,10 @@ end
 function M.catppuccin_opts(options, f)
   return {
     flavour = f or flavour,
-    transparent_background = options.background,
+    transparent_background = options.transparent,
     kitty = kitty.is_kitty(),
     float = {
-      transparent = options.float,
+      transparent = options.transparent,
     },
   }
 end

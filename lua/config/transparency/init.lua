@@ -7,8 +7,7 @@ local matugen = require("config.transparency.matugen")
 local M = {}
 
 M.options = {
-  background = true,
-  float = true,
+  transparent = true,
 }
 
 local function active()
@@ -41,7 +40,7 @@ function M.setup_matugen_theme()
 end
 
 function M.lualine_enabled()
-  return M.options.background
+  return M.options.transparent
 end
 
 function M.lualine_theme()
@@ -72,11 +71,9 @@ function M.apply(opts)
   local flavour = fallback.get_flavour()
   highlights.ensure_blink_kind_groups(flavour)
 
-  highlights.apply_transparency(opts.background, groups.BACKGROUND_GROUPS, groups.BACKGROUND_PATTERNS, flavour)
-  highlights.apply_transparency(opts.background, groups.DIFF_GROUPS, nil, flavour)
-  highlights.apply_transparency(opts.float, groups.FLOAT_GROUPS, groups.FLOAT_PATTERNS, flavour)
+  highlights.apply_transparency(opts.transparent, groups.TRANSPARENT_GROUPS, groups.TRANSPARENT_PATTERNS, flavour)
 
-  if opts.background then
+  if opts.transparent then
     M.refresh_lualine()
   end
 end

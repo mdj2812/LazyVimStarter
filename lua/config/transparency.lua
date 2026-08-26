@@ -7,6 +7,8 @@ M.options = {
 
 local matugen_active = false
 local orig_matugen_setup = nil
+local matugen_wrapped = false
+local matugen_reload_handler_registered = false
 
 local BACKGROUND_GROUPS = {
   "Normal",
@@ -47,8 +49,6 @@ local FLOAT_GROUPS = {
   "TelescopeResultsTitle",
   "TelescopeSelection",
   "TelescopeSelectionCaret",
-  "BlinkCmpKindFile",
-  "BlinkCmpKindFolder",
   "Pmenu",
   "PmenuBorder",
   "PmenuKind",
@@ -95,6 +95,14 @@ local DIFF_GROUPS = {
 
 local function hi(group, opts)
   vim.api.nvim_set_hl(0, group, opts)
+end
+
+local function base16_colors()
+  local ok, base16 = pcall(require, "base16-colorscheme")
+  if not ok or not base16.colors then
+    return nil
+  end
+  return base16.colors
 end
 
 local function hl_to_opts(hl)
@@ -159,13 +167,13 @@ local function clear_bg_patterns(patterns)
 end
 
 local function ensure_blink_kind_groups()
-  local ok, base16 = pcall(require, "base16-colorscheme")
-  if not ok or not base16.colors then
+  local colors = base16_colors()
+  if not colors then
     return
   end
 
   for group, color_key in pairs(BLINK_KIND_GROUPS) do
-    hi(group, { fg = base16.colors[color_key], bg = "NONE" })
+    hi(group, { fg = colors[color_key], bg = "NONE" })
   end
 end
 
@@ -195,14 +203,6 @@ local function nudge_hex(hex)
   return string.format("#%s%02x", h:sub(1, 4), b)
 end
 
-local function kitty_opaque_nudge_map(transparent_colors)
-  local map = {}
-  for _, color in ipairs(transparent_colors) do
-    map[color:lower()] = nudge_hex(color)
-  end
-  return map
-end
-
 local function nudge_kitty_opaque_group(group, nudge_map)
   local hl = vim.api.nvim_get_hl(0, { name = group, link = true })
   if vim.tbl_isempty(hl) or not hl.bg then
@@ -220,62 +220,54 @@ local function nudge_kitty_opaque_group(group, nudge_map)
   hi(group, opts)
 end
 
-local function apply_kitty_opaque_groups(groups, transparent_colors)
+local function apply_kitty_opaque(groups, patterns, transparent_colors)
   if not is_kitty() then
     return
   end
 
-  local nudge_map = kitty_opaque_nudge_map(transparent_colors)
+  local nudge_map = {}
+  for _, color in ipairs(transparent_colors) do
+    nudge_map[color:lower()] = nudge_hex(color)
+  end
+
   for _, group in ipairs(groups) do
     nudge_kitty_opaque_group(group, nudge_map)
   end
-end
 
-local function apply_kitty_opaque_patterns(patterns, transparent_colors)
-  if not is_kitty() then
-    return
-  end
-
-  local nudge_map = kitty_opaque_nudge_map(transparent_colors)
-  for _, group in ipairs(vim.fn.getcompletion("", "highlight")) do
-    for _, pattern in ipairs(patterns) do
-      if group:match(pattern) then
-        nudge_kitty_opaque_group(group, nudge_map)
-        break
+  if patterns then
+    for _, group in ipairs(vim.fn.getcompletion("", "highlight")) do
+      for _, pattern in ipairs(patterns) do
+        if group:match(pattern) then
+          nudge_kitty_opaque_group(group, nudge_map)
+          break
+        end
       end
     end
   end
 end
 
 local function kitty_opaque_colors()
-  local ok, base16 = pcall(require, "base16-colorscheme")
-  if not ok or not base16.colors or not base16.colors.base00 then
+  local colors = base16_colors()
+  if not colors or not colors.base00 then
     return nil
   end
-
-  return { base16.colors.base00 }
+  return { colors.base00 }
 end
 
-function M.set_matugen_active(active)
-  matugen_active = active
-end
+local function apply_transparency(enabled, groups, patterns)
+  if enabled then
+    clear_bg(groups)
+    if patterns then
+      clear_bg_patterns(patterns)
+    end
+    return
+  end
 
-function M.uses_matugen()
-  return vim.fn.filereadable(vim.fn.stdpath("config") .. "/lua/matugen.lua") == 1
+  local opaque_colors = kitty_opaque_colors()
+  if opaque_colors then
+    apply_kitty_opaque(groups, patterns, opaque_colors)
+  end
 end
-
-function M.catppuccin_opts(flavour)
-  return {
-    flavour = flavour,
-    transparent_background = M.options.background,
-    float = {
-      transparent = M.options.float,
-    },
-  }
-end
-
-local matugen_wrapped = false
-local matugen_reload_handler_registered = false
 
 local function wrap_matugen()
   local ok, matugen = pcall(require, "matugen")
@@ -312,6 +304,31 @@ local function register_matugen_reload_handler()
   )
 end
 
+local function schedule_apply()
+  if not matugen_active then
+    return
+  end
+  vim.schedule(M.apply)
+end
+
+function M.set_matugen_active(active)
+  matugen_active = active
+end
+
+function M.uses_matugen()
+  return vim.fn.filereadable(vim.fn.stdpath("config") .. "/lua/matugen.lua") == 1
+end
+
+function M.catppuccin_opts(flavour)
+  return {
+    flavour = flavour,
+    transparent_background = M.options.background,
+    float = {
+      transparent = M.options.float,
+    },
+  }
+end
+
 function M.setup_matugen_theme()
   M.set_matugen_active(true)
   wrap_matugen()
@@ -336,29 +353,9 @@ function M.apply(opts)
 
   ensure_blink_kind_groups()
 
-  if opts.background then
-    clear_bg(BACKGROUND_GROUPS)
-    clear_bg(DIFF_GROUPS)
-    clear_bg_patterns(BACKGROUND_PATTERNS)
-  else
-    local opaque_colors = kitty_opaque_colors()
-    if opaque_colors then
-      apply_kitty_opaque_groups(BACKGROUND_GROUPS, opaque_colors)
-      apply_kitty_opaque_groups(DIFF_GROUPS, opaque_colors)
-      apply_kitty_opaque_patterns(BACKGROUND_PATTERNS, opaque_colors)
-    end
-  end
-
-  if opts.float then
-    clear_bg(FLOAT_GROUPS)
-    clear_bg_patterns(FLOAT_PATTERNS)
-  else
-    local opaque_colors = kitty_opaque_colors()
-    if opaque_colors then
-      apply_kitty_opaque_groups(FLOAT_GROUPS, opaque_colors)
-      apply_kitty_opaque_patterns(FLOAT_PATTERNS, opaque_colors)
-    end
-  end
+  apply_transparency(opts.background, BACKGROUND_GROUPS, BACKGROUND_PATTERNS)
+  apply_transparency(opts.background, DIFF_GROUPS)
+  apply_transparency(opts.float, FLOAT_GROUPS, FLOAT_PATTERNS)
 
   if opts.background then
     M.refresh_lualine()
@@ -368,10 +365,9 @@ end
 function M.lualine_component_color(hl_group)
   return function()
     local color = { bg = "NONE" }
-
-    local ok, base16 = pcall(require, "base16-colorscheme")
-    if ok and base16.colors then
-      color.fg = base16.colors.base05
+    local colors = base16_colors()
+    if colors then
+      color.fg = colors.base05
     end
 
     if hl_group then
@@ -386,57 +382,54 @@ function M.lualine_component_color(hl_group)
 end
 
 function M.lualine_theme()
-  local ok, base16 = pcall(require, "base16-colorscheme")
-  if not ok or not base16.colors then
+  local colors = base16_colors()
+  if not colors then
     return nil
   end
 
-  local c = base16.colors
-  local transparent = "NONE"
-
   local function mode_a(bg, fg)
-    return { bg = bg, fg = fg or c.base00, gui = "bold" }
+    return { bg = bg, fg = fg or colors.base00, gui = "bold" }
   end
 
   local function mode_bc(fg)
-    return { bg = transparent, fg = fg or c.base05 }
+    return { bg = "NONE", fg = fg or colors.base05 }
   end
 
   return {
     normal = {
-      a = mode_a(c.base0D),
-      b = mode_bc(c.base0D),
-      c = mode_bc(c.base05),
+      a = mode_a(colors.base0D),
+      b = mode_bc(colors.base0D),
+      c = mode_bc(colors.base05),
     },
     insert = {
-      a = mode_a(c.base0B),
-      b = mode_bc(c.base0B),
-      c = mode_bc(c.base05),
+      a = mode_a(colors.base0B),
+      b = mode_bc(colors.base0B),
+      c = mode_bc(colors.base05),
     },
     visual = {
-      a = mode_a(c.base0E),
-      b = mode_bc(c.base0E),
-      c = mode_bc(c.base05),
+      a = mode_a(colors.base0E),
+      b = mode_bc(colors.base0E),
+      c = mode_bc(colors.base05),
     },
     replace = {
-      a = mode_a(c.base08),
-      b = mode_bc(c.base08),
-      c = mode_bc(c.base05),
+      a = mode_a(colors.base08),
+      b = mode_bc(colors.base08),
+      c = mode_bc(colors.base05),
     },
     command = {
-      a = mode_a(c.base0A),
-      b = mode_bc(c.base0A),
-      c = mode_bc(c.base05),
+      a = mode_a(colors.base0A),
+      b = mode_bc(colors.base0A),
+      c = mode_bc(colors.base05),
     },
     terminal = {
-      a = mode_a(c.base0B),
-      b = mode_bc(c.base0B),
-      c = mode_bc(c.base05),
+      a = mode_a(colors.base0B),
+      b = mode_bc(colors.base0B),
+      c = mode_bc(colors.base05),
     },
     inactive = {
-      a = mode_bc(c.base04),
-      b = mode_bc(c.base03),
-      c = mode_bc(c.base03),
+      a = mode_bc(colors.base04),
+      b = mode_bc(colors.base03),
+      c = mode_bc(colors.base03),
     },
   }
 end
@@ -453,13 +446,6 @@ function M.refresh_lualine()
 
   require("lualine.highlight").create_highlight_groups(theme)
   require("lualine").refresh({ force = true })
-end
-
-local function schedule_apply()
-  if not matugen_active then
-    return
-  end
-  vim.schedule(M.apply)
 end
 
 vim.api.nvim_create_autocmd("UIEnter", {

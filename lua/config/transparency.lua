@@ -62,6 +62,22 @@ local BACKGROUND_PATTERNS = {
   "^NvimTree",
   "^Mason",
   "^Lazy",
+  "^GitSigns",
+  "^GitGutter",
+  "^lualine_.*_diff_",
+}
+
+local DIFF_GROUPS = {
+  "DiffAdd",
+  "DiffChange",
+  "DiffDelete",
+  "DiffText",
+  "DiffTextAdd",
+  "DiffAdded",
+  "DiffRemoved",
+  "DiffFile",
+  "DiffNewFile",
+  "DiffLine",
 }
 
 local function hi(group, opts)
@@ -89,6 +105,10 @@ function M.set_matugen_active(active)
   matugen_active = active
 end
 
+function M.lualine_enabled()
+  return M.options.background
+end
+
 function M.apply(opts)
   if not matugen_active then
     return
@@ -98,6 +118,7 @@ function M.apply(opts)
 
   if opts.background then
     clear_bg(BACKGROUND_GROUPS)
+    clear_bg(DIFF_GROUPS)
     clear_bg_patterns(BACKGROUND_PATTERNS)
   end
 
@@ -112,15 +133,29 @@ function M.apply(opts)
     end
   end
 
-  M.refresh_lualine()
+  if opts.background then
+    M.refresh_lualine()
+  end
 end
 
-function M.lualine_component_color()
-  local ok, base16 = pcall(require, "base16-colorscheme")
-  if ok and base16.colors then
-    return { fg = base16.colors.base05, bg = "NONE" }
+function M.lualine_component_color(hl_group)
+  return function()
+    local color = { bg = "NONE" }
+
+    local ok, base16 = pcall(require, "base16-colorscheme")
+    if ok and base16.colors then
+      color.fg = base16.colors.base05
+    end
+
+    if hl_group then
+      local hl = vim.api.nvim_get_hl(0, { name = hl_group, link = false })
+      if hl.fg then
+        color.fg = string.format("#%06x", hl.fg)
+      end
+    end
+
+    return color
   end
-  return { bg = "NONE" }
 end
 
 function M.lualine_theme()
@@ -180,7 +215,7 @@ function M.lualine_theme()
 end
 
 function M.refresh_lualine()
-  if not matugen_active or not package.loaded["lualine"] then
+  if not matugen_active or not M.lualine_enabled() or not package.loaded["lualine"] then
     return
   end
 
@@ -208,6 +243,12 @@ vim.api.nvim_create_autocmd("UIEnter", {
 -- Lualine loads on VeryLazy, after UIEnter.
 vim.api.nvim_create_autocmd("User", {
   pattern = "VeryLazy",
+  callback = schedule_apply,
+})
+
+-- Gitsigns loads on first file open, after VeryLazy.
+vim.api.nvim_create_autocmd({ "BufReadPost", "BufNewFile" }, {
+  once = true,
   callback = schedule_apply,
 })
 

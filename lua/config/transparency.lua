@@ -6,6 +6,7 @@ M.options = {
 }
 
 local matugen_active = false
+local orig_matugen_setup = nil
 
 local BACKGROUND_GROUPS = {
   "Normal",
@@ -48,6 +49,10 @@ local FLOAT_GROUPS = {
   "TelescopeSelectionCaret",
   "BlinkCmpKindFile",
   "BlinkCmpKindFolder",
+  "Pmenu",
+  "PmenuBorder",
+  "PmenuKind",
+  "PmenuExtra",
 }
 
 -- base16 does not define these; blink cmdline path completions use them for icons
@@ -164,6 +169,93 @@ local function ensure_blink_kind_groups()
   end
 end
 
+-- Kitty treats cell backgrounds that exactly match the terminal background as
+-- transparent when background_opacity is enabled. Nudge by one step so solid
+-- mode looks opaque while staying visually indistinguishable.
+local function is_kitty()
+  return vim.env.KITTY_WINDOW_ID ~= nil or vim.env.TERM == "xterm-kitty"
+end
+
+local function nudge_hex(hex)
+  if not hex or hex == "NONE" then
+    return hex
+  end
+
+  local h = hex:gsub("#", ""):lower()
+  if #h ~= 6 then
+    return hex
+  end
+
+  local b = tonumber(h:sub(5, 6), 16)
+  if not b then
+    return hex
+  end
+
+  b = math.min(255, b + 1)
+  return string.format("#%s%02x", h:sub(1, 4), b)
+end
+
+local function kitty_opaque_nudge_map(transparent_colors)
+  local map = {}
+  for _, color in ipairs(transparent_colors) do
+    map[color:lower()] = nudge_hex(color)
+  end
+  return map
+end
+
+local function nudge_kitty_opaque_group(group, nudge_map)
+  local hl = vim.api.nvim_get_hl(0, { name = group, link = true })
+  if vim.tbl_isempty(hl) or not hl.bg then
+    return
+  end
+
+  local bg = string.format("#%06x", hl.bg)
+  local nudged = nudge_map[bg:lower()]
+  if not nudged then
+    return
+  end
+
+  local opts = hl_to_opts(hl)
+  opts.bg = nudged
+  hi(group, opts)
+end
+
+local function apply_kitty_opaque_groups(groups, transparent_colors)
+  if not is_kitty() then
+    return
+  end
+
+  local nudge_map = kitty_opaque_nudge_map(transparent_colors)
+  for _, group in ipairs(groups) do
+    nudge_kitty_opaque_group(group, nudge_map)
+  end
+end
+
+local function apply_kitty_opaque_patterns(patterns, transparent_colors)
+  if not is_kitty() then
+    return
+  end
+
+  local nudge_map = kitty_opaque_nudge_map(transparent_colors)
+  for _, group in ipairs(vim.fn.getcompletion("", "highlight")) do
+    for _, pattern in ipairs(patterns) do
+      if group:match(pattern) then
+        nudge_kitty_opaque_group(group, nudge_map)
+        break
+      end
+    end
+  end
+end
+
+local function kitty_opaque_colors()
+  local ok, base16 = pcall(require, "base16-colorscheme")
+  if not ok or not base16.colors or not base16.colors.base00 then
+    return nil
+  end
+
+  return { base16.colors.base00 }
+end
+
 function M.set_matugen_active(active)
   matugen_active = active
 end
@@ -191,10 +283,9 @@ local function wrap_matugen()
     return
   end
 
-  local orig_setup = matugen.setup
+  orig_matugen_setup = matugen.setup
   matugen.setup = function(...)
-    orig_setup(...)
-    M.apply()
+    M.apply(...)
   end
   matugen._theme_wrapped = true
   matugen_wrapped = true
@@ -239,22 +330,33 @@ function M.apply(opts)
 
   opts = vim.tbl_extend("force", M.options, opts or {})
 
+  if orig_matugen_setup then
+    orig_matugen_setup()
+  end
+
+  ensure_blink_kind_groups()
+
   if opts.background then
     clear_bg(BACKGROUND_GROUPS)
     clear_bg(DIFF_GROUPS)
     clear_bg_patterns(BACKGROUND_PATTERNS)
+  else
+    local opaque_colors = kitty_opaque_colors()
+    if opaque_colors then
+      apply_kitty_opaque_groups(BACKGROUND_GROUPS, opaque_colors)
+      apply_kitty_opaque_groups(DIFF_GROUPS, opaque_colors)
+      apply_kitty_opaque_patterns(BACKGROUND_PATTERNS, opaque_colors)
+    end
   end
 
   if opts.float then
-    ensure_blink_kind_groups()
-
-    if vim.o.winblend == 0 then
-      clear_bg(FLOAT_GROUPS)
-      clear_bg_patterns(FLOAT_PATTERNS)
-    end
-
-    if vim.o.pumblend == 0 then
-      clear_bg({ "Pmenu", "PmenuBorder", "PmenuKind", "PmenuExtra" })
+    clear_bg(FLOAT_GROUPS)
+    clear_bg_patterns(FLOAT_PATTERNS)
+  else
+    local opaque_colors = kitty_opaque_colors()
+    if opaque_colors then
+      apply_kitty_opaque_groups(FLOAT_GROUPS, opaque_colors)
+      apply_kitty_opaque_patterns(FLOAT_PATTERNS, opaque_colors)
     end
   end
 

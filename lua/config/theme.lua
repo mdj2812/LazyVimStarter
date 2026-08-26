@@ -1,9 +1,25 @@
 local M = {}
 
+M.fallback_colorscheme = "catppuccin-mocha"
+
+M.catppuccin = {
+  flavour = "mocha",
+}
+
 M.transparency = {
   background = true,
   float = true,
 }
+
+function M.catppuccin_opts()
+  return {
+    flavour = M.catppuccin.flavour,
+    transparent_background = M.transparency.background,
+    float = {
+      transparent = M.transparency.float,
+    },
+  }
+end
 
 local BACKGROUND_GROUPS = {
   "Normal",
@@ -119,6 +135,11 @@ local function wrap_matugen()
 end
 
 local reload_handler_registered = false
+local using_matugen = false
+
+local function has_matugen()
+  return vim.fn.filereadable(vim.fn.stdpath("config") .. "/lua/matugen.lua") == 1
+end
 
 local function register_reload_handler()
   if reload_handler_registered then
@@ -138,6 +159,12 @@ local function register_reload_handler()
 end
 
 function M.setup()
+  if not has_matugen() then
+    vim.cmd.colorscheme(M.fallback_colorscheme)
+    return
+  end
+
+  using_matugen = true
   wrap_matugen()
   register_reload_handler()
   require("matugen").setup()
@@ -146,6 +173,9 @@ end
 vim.api.nvim_create_autocmd("UIEnter", {
   once = true,
   callback = function()
+    if not using_matugen then
+      return
+    end
     vim.schedule(function()
       M.apply_transparency()
     end)

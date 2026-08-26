@@ -1,9 +1,8 @@
 return {
   "nvim-lualine/lualine.nvim",
   opts = function(_, opts)
-    local theme = require("config.theme")
     local transparency = require("config.transparency")
-    if not theme.uses_matugen() or not transparency.lualine_enabled() then
+    if not transparency.uses_matugen() or not transparency.lualine_enabled() then
       return opts
     end
 

@@ -46,6 +46,14 @@ local FLOAT_GROUPS = {
   "TelescopeResultsTitle",
   "TelescopeSelection",
   "TelescopeSelectionCaret",
+  "BlinkCmpKindFile",
+  "BlinkCmpKindFolder",
+}
+
+-- base16 does not define these; blink cmdline path completions use them for icons
+local BLINK_KIND_GROUPS = {
+  BlinkCmpKindFile = "base08",
+  BlinkCmpKindFolder = "base0A",
 }
 
 local FLOAT_PATTERNS = {
@@ -145,8 +153,79 @@ local function clear_bg_patterns(patterns)
   end
 end
 
+local function ensure_blink_kind_groups()
+  local ok, base16 = pcall(require, "base16-colorscheme")
+  if not ok or not base16.colors then
+    return
+  end
+
+  for group, color_key in pairs(BLINK_KIND_GROUPS) do
+    hi(group, { fg = base16.colors[color_key], bg = "NONE" })
+  end
+end
+
 function M.set_matugen_active(active)
   matugen_active = active
+end
+
+function M.uses_matugen()
+  return vim.fn.filereadable(vim.fn.stdpath("config") .. "/lua/matugen.lua") == 1
+end
+
+function M.catppuccin_opts(flavour)
+  return {
+    flavour = flavour,
+    transparent_background = M.options.background,
+    float = {
+      transparent = M.options.float,
+    },
+  }
+end
+
+local matugen_wrapped = false
+local matugen_reload_handler_registered = false
+
+local function wrap_matugen()
+  local ok, matugen = pcall(require, "matugen")
+  if not ok or matugen_wrapped then
+    return
+  end
+
+  local orig_setup = matugen.setup
+  matugen.setup = function(...)
+    orig_setup(...)
+    M.apply()
+  end
+  matugen._theme_wrapped = true
+  matugen_wrapped = true
+end
+
+local function register_matugen_reload_handler()
+  if matugen_reload_handler_registered then
+    return
+  end
+  matugen_reload_handler_registered = true
+
+  -- Noctalia reloads matugen on SIGUSR1, which drops our setup wrapper.
+  -- Register after matugen's handler so transparency is re-applied last.
+  local signal = vim.uv.new_signal()
+  signal:start(
+    "sigusr1",
+    vim.schedule_wrap(function()
+      vim.schedule(function()
+        matugen_wrapped = false
+        wrap_matugen()
+        M.apply()
+      end)
+    end)
+  )
+end
+
+function M.setup_matugen_theme()
+  M.set_matugen_active(true)
+  wrap_matugen()
+  register_matugen_reload_handler()
+  require("matugen").setup()
 end
 
 function M.lualine_enabled()
@@ -167,6 +246,8 @@ function M.apply(opts)
   end
 
   if opts.float then
+    ensure_blink_kind_groups()
+
     if vim.o.winblend == 0 then
       clear_bg(FLOAT_GROUPS)
       clear_bg_patterns(FLOAT_PATTERNS)

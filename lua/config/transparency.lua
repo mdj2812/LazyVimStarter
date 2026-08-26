@@ -84,9 +84,53 @@ local function hi(group, opts)
   vim.api.nvim_set_hl(0, group, opts)
 end
 
+local function hl_to_opts(hl)
+  local opts = {}
+  if hl.fg then
+    opts.fg = string.format("#%06x", hl.fg)
+  end
+  if hl.bg then
+    opts.bg = string.format("#%06x", hl.bg)
+  end
+  if hl.sp then
+    opts.sp = string.format("#%06x", hl.sp)
+  end
+  if hl.bold then
+    opts.bold = true
+  end
+  if hl.italic then
+    opts.italic = true
+  end
+  if hl.underline then
+    opts.underline = true
+  end
+  if hl.undercurl then
+    opts.undercurl = true
+  end
+  if hl.strikethrough then
+    opts.strikethrough = true
+  end
+  if hl.reverse then
+    opts.reverse = true
+  end
+  return opts
+end
+
+-- nvim_set_hl with only { bg = "none" } clears the whole group; preserve fg and other attrs.
+local function clear_bg_group(group)
+  local hl = vim.api.nvim_get_hl(0, { name = group, link = true })
+  if vim.tbl_isempty(hl) then
+    return
+  end
+
+  local opts = hl_to_opts(hl)
+  opts.bg = "NONE"
+  hi(group, opts)
+end
+
 local function clear_bg(groups)
   for _, group in ipairs(groups) do
-    hi(group, { bg = "none" })
+    clear_bg_group(group)
   end
 end
 
@@ -94,7 +138,7 @@ local function clear_bg_patterns(patterns)
   for _, group in ipairs(vim.fn.getcompletion("", "highlight")) do
     for _, pattern in ipairs(patterns) do
       if group:match(pattern) then
-        hi(group, { bg = "none" })
+        clear_bg_group(group)
         break
       end
     end

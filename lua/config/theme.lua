@@ -22,6 +22,23 @@ function M.uses_matugen()
   return vim.fn.filereadable(vim.fn.stdpath("config") .. "/lua/matugen.lua") == 1
 end
 
+-- base16 does not define File/Folder kinds; blink cmdline path completions use them for icons
+local function apply_blink_kinds()
+  local ok, base16 = pcall(require, "base16-colorscheme")
+  if not ok or not base16.colors then
+    return
+  end
+
+  local c = base16.colors
+  vim.api.nvim_set_hl(0, "BlinkCmpKindFile", { fg = c.base08, bg = "NONE" })
+  vim.api.nvim_set_hl(0, "BlinkCmpKindFolder", { fg = c.base0A, bg = "NONE" })
+end
+
+local function after_matugen_setup()
+  transparency.apply()
+  apply_blink_kinds()
+end
+
 local function wrap_matugen()
   local ok, matugen = pcall(require, "matugen")
   if not ok or matugen._theme_wrapped then
@@ -31,7 +48,7 @@ local function wrap_matugen()
   local orig_setup = matugen.setup
   matugen.setup = function(...)
     orig_setup(...)
-    transparency.apply()
+    after_matugen_setup()
   end
   matugen._theme_wrapped = true
 end
@@ -50,7 +67,7 @@ local function register_reload_handler()
   signal:start("sigusr1", vim.schedule_wrap(function()
     vim.schedule(function()
       wrap_matugen()
-      transparency.apply()
+      after_matugen_setup()
     end)
   end))
 end

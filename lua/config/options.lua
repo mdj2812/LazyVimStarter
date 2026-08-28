@@ -4,22 +4,20 @@
 vim.g.lazyvim_python_lsp = "pyright"
 vim.g.lazyvim_python_ruff = "ruff"
 
-if vim.env.HERDR_PANE_ID then
-  local osc52_copy = require("vim.ui.clipboard.osc52").copy("+")
-  local cache = { { "" }, "v" }
+local osc52_copy = require("vim.ui.clipboard.osc52").copy("+")
+local cache = { { "" }, "v" }
 
-  local function copy(lines, regtype)
-    cache = { vim.deepcopy(lines), regtype }
-    osc52_copy(lines)
-  end
-
-  local function paste()
-    return vim.deepcopy(cache)
-  end
-
-  vim.g.clipboard = {
-    name = "OSC 52 (Herdr)",
-    copy = { ["+"] = copy, ["*"] = copy },
-    paste = { ["+"] = paste, ["*"] = paste },
-  }
+local function copy(lines, regtype)
+  cache = { vim.deepcopy(lines), regtype }
+  osc52_copy(lines)
 end
+
+local function paste()
+  return vim.deepcopy(cache)
+end
+
+vim.g.clipboard = {
+  name = "OSC 52",
+  copy = { ["+"] = copy, ["*"] = copy },
+  paste = { ["+"] = paste, ["*"] = paste },
+}

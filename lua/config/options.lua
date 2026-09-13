@@ -4,6 +4,9 @@
 vim.g.lazyvim_python_lsp = "pyright"
 vim.g.lazyvim_python_ruff = "ruff"
 
+-- LazyVim disables clipboard sync over SSH; re-enable it so yanks use OSC 52 below.
+vim.opt.clipboard = "unnamedplus"
+
 local osc52_copy = require("vim.ui.clipboard.osc52").copy("+")
 local cache = { { "" }, "v" }
 

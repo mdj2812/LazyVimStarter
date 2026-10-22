@@ -6,6 +6,7 @@ return {
         timeout_ms = 10000,
       },
       formatters_by_ft = {
+        c = { "clang-format" },
         cpp = { "clang-format" },
         cuda = { "clang-format" },
         cmake = { "cmake_format" },
@@ -22,7 +23,7 @@ return {
           stdin = false,
         },
         jq = {
-          args = { "--indent", "2" },
+          args = { "--indent", "4" },
         },
         codespell = {
           args = { "ignore-words", ".codespellignore" },
